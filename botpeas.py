@@ -86,32 +86,54 @@ def update_lasttimes():
 ################## SEARCH CVES ####################
 
 def get_cves(tt_filter:Time_Type) -> dict:
-    ''' Given the headers for the API retrive CVEs from cve.circl.lu '''
-    now = datetime.datetime.now() - datetime.timedelta(days=1)
-    now_str = now.strftime("%d-%m-%Y")
+    ''' Recupera CVE direttamente dal NIST NVD API v2 '''
+    import time
+    
+    api_key = os.getenv('NVD_API_KEY')
+    base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+    
+    # Il NIST vuole le date in formato ISO 8601
+    now = datetime.datetime.now()
+    start_date = now - datetime.timedelta(days=1)
+    
+    # Formato richiesto: 2023-12-05T00:00:00.000
+    start_str = start_date.strftime("%Y-%m-%dT%H:%M:%S.000")
+    end_str = now.strftime("%Y-%m-%dT%H:%M:%S.000")
 
-    headers = {
-        "time_modifier": "from",
-        "time_start": now_str,
-        "time_type": tt_filter.value,
-        "limit": "100",
+    params = {
+        "pubStartDate": start_str,
+        "pubEndDate": end_str
     }
     
-    print(f"DEBUG: Richiesta a {CIRCL_LU_URL} per {tt_filter.value}...")
+    headers = {}
+    if api_key:
+        headers["apiKey"] = api_key
+
+    print(f"DEBUG: Interrogo NIST NVD per i nuovi CVE...")
     
     try:
-        r = requests.get(CIRCL_LU_URL, headers=headers, timeout=30)
-        
-        # Se il server risponde con un errore (es. 503 o 404)
-        if r.status_code != 200:
-            print(f"ERRORE SERVER: Status {r.status_code}")
-            print(f"CONTENUTO RISPOSTA: {r.text[:200]}") # Vediamo se è HTML
-            return {"results": []} # Ritorna una lista vuota per non far crashare il resto
-            
-        return r.json()
-        
+        r = requests.get(base_url, params=params, headers=headers, timeout=30)
+        if r.status_code == 200:
+            data = r.json()
+            # Adattiamo il formato NIST a quello che BotPEASS si aspetta
+            normalized_results = []
+            for item in data.get("vulnerabilities", []):
+                cve = item.get("cve", {})
+                # Creiamo un mini-oggetto compatibile col resto del bot
+                normalized_results.append({
+                    "id": cve.get("id"),
+                    "summary": cve.get("descriptions", [{}])[0].get("value", "No description"),
+                    "Published": cve.get("published"),
+                    "cvss": cve.get("metrics", {}).get("cvssMetricV31", [{}])[0].get("cvssData", {}).get("baseScore", "N/A"),
+                    "vulnerable_configuration": [], # Il NIST usa i nodi CPE, più complessi da estrarre al volo
+                    "references": [ref.get("url") for ref in cve.get("references", [])]
+                })
+            return {"results": normalized_results}
+        else:
+            print(f"ERRORE NIST: Status {r.status_code} - {r.text[:100]}")
+            return {"results": []}
     except Exception as e:
-        print(f"ERRORE DI CONNESSIONE: {e}")
+        print(f"ERRORE CONNESSIONE NIST: {e}")
         return {"results": []}
 
 def get_new_cves() -> list:
