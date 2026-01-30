@@ -15,7 +15,7 @@ CIRCL_LU_URL = "https://cve.circl.lu/api/query"
 CVES_JSON_PATH = join(pathlib.Path(__file__).parent.absolute(), "output/botpeas.json")
 LAST_NEW_CVE = datetime.datetime.now() - datetime.timedelta(days=1)
 LAST_MODIFIED_CVE = datetime.datetime.now() - datetime.timedelta(days=1)
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 KEYWORDS_CONFIG_PATH = join(pathlib.Path(__file__).parent.absolute(), "config/botpeas.yaml")
 ALL_VALID = False
@@ -123,7 +123,7 @@ def get_cves(tt_filter:Time_Type) -> dict:
                 normalized_results.append({
                     "id": cve.get("id"),
                     "summary": cve.get("descriptions", [{}])[0].get("value", "No description"),
-                    "Published": cve.get("published"),
+                    "Published": cve.get("published").replace('Z', ''),
                     "cvss": cve.get("metrics", {}).get("cvssMetricV31", [{}])[0].get("cvssData", {}).get("baseScore", "N/A"),
                     "vulnerable_configuration": [], # Il NIST usa i nodi CPE, più complessi da estrarre al volo
                     "references": [ref.get("url") for ref in cve.get("references", [])]
