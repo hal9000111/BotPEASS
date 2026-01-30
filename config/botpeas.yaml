@@ -1,38 +1,26 @@
-ALL_VALID: no
+# Se metti True, ti invia TUTTE le CVE (te lo sconsiglio, sono troppe)
+ALL_VALID: False
 
+# Parole chiave da cercare nella descrizione (Case Insensitive)
 DESCRIPTION_KEYWORDS_I:
-- privilege escalation
-- escalation
-- privesc
-- high integrity
-- elevated privilege
-- escalation of privilege
-- " sudo "
-- " suid "
-- " pe "
-- " UAC "
-- User Account Control
-- linpeas
-- winpeas
-- docker
-- kubernetes
-- " lxc "
-- podman
+  - "fortinet"
+  - "fortios"
+  - "forticlient"
+  - "fortigate"
+  - "fortiproxy"
+  - "privilege escalation"
+  - "remote code execution"
 
+# Parole chiave esatte (Case Sensitive)
 DESCRIPTION_KEYWORDS:
-- ThisIsACaseSensitiveExample
+  - "Fortinet"
+  - "FortiGate"
 
+# Parole chiave da cercare nel campo "Product"
 PRODUCT_KEYWORDS_I:
-- sudo
-- docker
-- kubernetes
-- lxc
-- podman
-- container
-- linux
-- windows
-- macos
-
+  - "fortinet"
+  - "fortios"
+  - "forticlient"
 
 PRODUCT_KEYWORDS:
-- ThisIsACaseSensitiveExample
+  - "fortinet"
