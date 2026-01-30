@@ -96,10 +96,23 @@ def get_cves(tt_filter:Time_Type) -> dict:
         "time_type": tt_filter.value,
         "limit": "100",
     }
-    r = requests.get(CIRCL_LU_URL, headers=headers)
-
-    return r.json()
-
+    
+    print(f"DEBUG: Richiesta a {CIRCL_LU_URL} per {tt_filter.value}...")
+    
+    try:
+        r = requests.get(CIRCL_LU_URL, headers=headers, timeout=30)
+        
+        # Se il server risponde con un errore (es. 503 o 404)
+        if r.status_code != 200:
+            print(f"ERRORE SERVER: Status {r.status_code}")
+            print(f"CONTENUTO RISPOSTA: {r.text[:200]}") # Vediamo se è HTML
+            return {"results": []} # Ritorna una lista vuota per non far crashare il resto
+            
+        return r.json()
+        
+    except Exception as e:
+        print(f"ERRORE DI CONNESSIONE: {e}")
+        return {"results": []}
 
 def get_new_cves() -> list:
     ''' Get CVEs that are new '''
