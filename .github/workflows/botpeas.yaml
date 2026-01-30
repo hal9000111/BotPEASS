@@ -2,7 +2,7 @@ name: botpeas_action
 
 on:
   schedule:
-    # Esegue il bot ogni 8 ore (00:00, 08:00, 16:00 UTC)
+    # Esegue il bot ogni 8 ore (00:00, 08:00, 16:00 UTC) # aggiornamento cron
     - cron: '0 */8 * * *'
   workflow_dispatch:
   pull_request:
